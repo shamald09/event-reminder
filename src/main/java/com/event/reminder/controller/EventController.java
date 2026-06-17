@@ -45,3 +45,4 @@ public Event updateEvent(@PathVariable Long id, @RequestBody Event updatedEvent)
 public void deleteEvent(@PathVariable Long id) {
     repo.deleteById(id);
 }
+}

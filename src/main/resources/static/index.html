@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Reminder System</title>
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        margin: 0;
+        text-align: center;
+        color: white;
+    }
+
+    h1 {
+        padding: 20px;
+        color: #f8f8f8;
+    }
+
+    .container {
+        backdrop-filter: blur(15px);
+        background: rgba(255,255,255,0.08);
+        border-radius: 16px;
+        width: 360px;
+        margin: auto;
+        padding: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+
+    input {
+        width: 90%;
+        padding: 10px;
+        margin: 8px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        background: rgba(255,255,255,0.15);
+        color: white;
+    }
+
+    input::placeholder {
+        color: #ccc;
+    }
+
+    button {
+        padding: 10px 15px;
+        margin: 5px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #mainBtn {
+        background: linear-gradient(45deg, #ff4ecd, #7f5af0);
+        color: white;
+    }
+
+    #mainBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 10px #ff4ecd;
+    }
+
+    .event-card {
+        background: rgba(255,255,255,0.1);
+        margin: 15px auto;
+        padding: 15px;
+        width: 360px;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+        text-align: left;
+        transition: 0.3s;
+    }
+
+    .event-card:hover {
+        transform: scale(1.03);
+    }
+
+    .badge {
+        float: right;
+        padding: 5px 10px;
+        border-radius: 20px;
+        color: white;
+        font-size: 12px;
+    }
+
+    .green { background: #00c9a7; }
+    .orange { background: #f39c12; }
+    .red { background: #e74c3c; }
+
+    .edit-btn {
+        background: #6c5ce7;
+        color: white;
+    }
+
+    .delete-btn {
+        background: #e74c3c;
+        color: white;
+    }
+
+    .edit-btn:hover { box-shadow: 0 0 8px #6c5ce7; }
+    .delete-btn:hover { box-shadow: 0 0 8px #e74c3c; }
+
+    .popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #6c5ce7;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0px 5px 20px rgba(0,0,0,0.5);
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: 0.4s;
+    }
+
+    .popup.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .empty-state {
+        background: rgba(255,255,255,0.1);
+        width: 360px;
+        margin: 20px auto;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        font-size: 18px;
+    }
+</style>
+
+</head>
+<body>
+
+<h1>🎉 Event Reminder System</h1>
+
+<div class="container">
+    <h3>Add / Update Event</h3>
+
+    <input id="title" placeholder="Title"><br>
+    <input id="category" placeholder="Category"><br>
+    <input id="date" type="date"><br>
+    <input id="desc" placeholder="Description"><br>
+    <input id="reminderDays" type="number" placeholder="Remind me before (days)">
+
+    <button id="mainBtn" onclick="addEvent()">Add Event</button>
+</div>
+
+<h2>📅 Your Events</h2>
+
+<div id="events"></div>
+
+<div id="popup" class="popup"></div>
+
+<script>
+
+function showPopup(msg) {
+    let popup = document.getElementById('popup');
+    popup.innerText = msg;
+    popup.classList.add('show');
+
+    setTimeout(() => {
+        popup.classList.remove('show');
+    }, 2000);
+}
+
+function clearForm() {
+    title.value = '';
+    category.value = '';
+    date.value = '';
+    desc.value = '';
+    reminderDays.value = '';
+}
+
+function addEvent() {
+    fetch('http://localhost:8080/events', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            title: title.value,
+            category: category.value,
+            date: date.value,
+            description: desc.value,
+            reminderDays: reminderDays.value
+        })
+    }).then(() => {
+        clearForm();
+        loadEvents();
+        showPopup("Event Added 🎉");
+    });
+}
+
+function deleteEvent(id) {
+    fetch(`http://localhost:8080/events/${id}`, {
+        method: 'DELETE'
+    }).then(() => {
+        loadEvents();
+        showPopup("Deleted ❌");
+    });
+}
+
+function editEvent(e) {
+    title.value = e.title;
+    category.value = e.category;
+    date.value = e.date;
+    desc.value = e.description;
+    reminderDays.value = e.reminderDays;
+
+    let btn = document.getElementById('mainBtn');
+    btn.innerText = "Update Event";
+
+    btn.onclick = function () {
+        updateEvent(e.id);
+    };
+}
+
+function updateEvent(id) {
+    fetch(`http://localhost:8080/events/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            title: title.value,
+            category: category.value,
+            date: date.value,
+            description: desc.value,
+            reminderDays: reminderDays.value
+        })
+    }).then(() => {
+        clearForm();
+        loadEvents();
+
+        let btn = document.getElementById('mainBtn');
+        btn.innerText = "Add Event";
+        btn.onclick = addEvent;
+
+        showPopup("Updated ✏️");
+    });
+}
+
+function getDaysLeft(date) {
+    let today = new Date();
+    let eventDate = new Date(date);
+    let diff = eventDate - today;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+// ✅ NEW LABEL LOGIC
+function formatDays(days) {
+    if (days === 0) return "Today";
+    if (days === 1) return "Tomorrow";
+    if (days < 0) return "Passed";
+    return days + " days";
+}
+
+function getBadgeClass(days) {
+    if (days <= 2) return "red";
+    if (days <= 5) return "orange";
+    return "green";
+}
+
+function loadEvents() {
+    fetch('http://localhost:8080/events')
+    .then(res => res.json())
+    .then(data => {
+
+        let container = document.getElementById('events');
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+            container.innerHTML = `<div class="empty-state">📭 No upcoming events</div>`;
+            return;
+        }
+
+        data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        data.forEach(e => {
+            let days = getDaysLeft(e.date);
+
+            let reminderText = "";
+
+            if (e.reminderDays !== null && e.reminderDays !== undefined && e.reminderDays !== "") {
+            let reminderDate = new Date(e.date);
+            reminderDate.setDate(reminderDate.getDate() - e.reminderDays);
+            reminderText = "⏰ Reminder: " + reminderDate.toISOString().split('T')[0];
+}
+
+            let card = document.createElement('div');
+            card.className = 'event-card';
+
+            card.innerHTML = `
+                <b>${e.title}</b>
+                <span class="badge ${getBadgeClass(days)}">${formatDays(days)}</span>
+                <br><br>
+                📂 ${e.category} <br>
+                📅 ${e.date} <br>
+                📝 ${e.description} <br>
+                ⏰ Reminder:${reminderText}
+                <br><br>
+                <button class="edit-btn" onclick='editEvent(${JSON.stringify(e)})'>Edit</button>
+                <button class="delete-btn" onclick="deleteEvent(${e.id})">Delete</button>
+            `;
+
+            container.appendChild(card);
+        });
+    });
+}
+
+loadEvents();
+
+</script>
+
+</body>
+</html>

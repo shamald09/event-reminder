@@ -19,6 +19,7 @@ public class Event {
   private LocalDate date;
 
   private String description;
+  private int reminderDays;
 
     // Getters & Setters
 
