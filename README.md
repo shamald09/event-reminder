@@ -306,7 +306,7 @@ http://localhost:8080
 
 # Author
 
-**Mahek Joshi**
+**Mahek Joshi & Shamal Deore**
 
 Built as a full-stack Spring Boot + PostgreSQL project demonstrating:
 
